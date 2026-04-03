@@ -44,9 +44,21 @@ export default function Home() {
         contentToAnalyze = parseData.text;
       }
 
-      // 2. Analyze the content using Gemini service (frontend)
-      const { analyzeLegalDocument } = await import("../services/geminiService");
-      const result = await analyzeLegalDocument(contentToAnalyze, language);
+
+    // 2. Send the content to the backend for analysis
+      const analyzeResponse = await fetch("http://localhost:3000/api/analyze", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ text: contentToAnalyze, language }),
+      });
+
+      if (!analyzeResponse.ok) {
+        throw new Error("Failed to analyze document with AI");
+      }
+
+      const result = await analyzeResponse.json();
       
       // Store results in session storage for the analysis page
       sessionStorage.setItem("analysisResult", JSON.stringify(result));

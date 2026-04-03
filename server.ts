@@ -1,3 +1,4 @@
+import { analyzeLegalDocument } from "./src/services/geminiService"; // Adjust the path if needed
 console.log(">>> server.ts is being executed at " + new Date().toISOString());
 import express from "express";
 import { createServer as createViteServer } from "vite";
@@ -82,6 +83,24 @@ async function startServer() {
     } catch (error) {
       console.error("PDF parsing error:", error);
       res.status(500).json({ error: "Failed to parse PDF" });
+    }
+  });
+
+  // API Route for Gemini Analysis
+  app.post("/api/analyze", async (req, res) => {
+    try {
+      const { text, language } = req.body;
+      
+      if (!text) {
+        return res.status(400).json({ error: "No text provided for analysis" });
+      }
+
+      // The server safely handles the API key and Gemini call
+      const analysis = await analyzeLegalDocument(text, language);
+      res.json(analysis);
+    } catch (error) {
+      console.error("Gemini API Error:", error);
+      res.status(500).json({ error: "Failed to analyze document" });
     }
   });
 
