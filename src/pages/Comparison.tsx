@@ -119,8 +119,8 @@ export default function Comparison() {
                       <div className={cn(
                         "flex h-8 w-8 items-center justify-center rounded-lg text-white mb-2",
                         file1.type.includes("pdf") ? "bg-rose-500" :
-                        file1.type.includes("word") ? "bg-blue-500" :
-                        file1.type.startsWith("image/") ? "bg-emerald-500" : "bg-indigo-500"
+                          file1.type.includes("word") ? "bg-blue-500" :
+                            file1.type.startsWith("image/") ? "bg-emerald-500" : "bg-indigo-500"
                       )}>
                         {file1.type.includes("pdf") && <FileText className="h-5 w-5" />}
                         {file1.type.includes("word") && <FileCode className="h-5 w-5" />}
@@ -166,8 +166,8 @@ export default function Comparison() {
                       <div className={cn(
                         "flex h-8 w-8 items-center justify-center rounded-lg text-white mb-2",
                         file2.type.includes("pdf") ? "bg-rose-500" :
-                        file2.type.includes("word") ? "bg-blue-500" :
-                        file2.type.startsWith("image/") ? "bg-emerald-500" : "bg-indigo-500"
+                          file2.type.includes("word") ? "bg-blue-500" :
+                            file2.type.startsWith("image/") ? "bg-emerald-500" : "bg-indigo-500"
                       )}>
                         {file2.type.includes("pdf") && <FileText className="h-5 w-5" />}
                         {file2.type.includes("word") && <FileCode className="h-5 w-5" />}

@@ -65,7 +65,7 @@ async function startServer() {
   app.post("/api/analyze", async (req, res) => {
     try {
       const { text, language } = req.body;
-      
+
       if (!text) {
         return res.status(400).json({ error: "No text provided for analysis" });
       }
@@ -83,7 +83,7 @@ async function startServer() {
   app.post("/api/share", async (req, res) => {
     try {
       const { summary, overallRisk, clauses } = req.body;
-      
+
       const shareId = nanoid ? nanoid(10) : crypto.randomBytes(5).toString('hex');
       const password = crypto.randomBytes(3).toString('hex'); // Random 6 char password
 
@@ -169,7 +169,7 @@ async function startServer() {
   // Vite middleware for development
   if (process.env.NODE_ENV !== "production") {
     const vite = await createViteServer({
-      server: { 
+      server: {
         middlewareMode: true,
         hmr: false,
         watch: {

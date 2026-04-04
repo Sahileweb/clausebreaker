@@ -151,9 +151,9 @@ export default function Home() {
                     <div className="flex flex-col items-center text-center">
                       <div className={cn(
                         "flex h-12 w-12 items-center justify-center rounded-xl text-white shadow-lg",
-                        file.type.includes("pdf") ? "bg-rose-600" : 
-                        file.type.includes("word") ? "bg-blue-600" : 
-                        file.type.startsWith("image/") ? "bg-emerald-600" : "bg-indigo-600"
+                        file.type.includes("pdf") ? "bg-rose-600" :
+                          file.type.includes("word") ? "bg-blue-600" :
+                            file.type.startsWith("image/") ? "bg-emerald-600" : "bg-indigo-600"
                       )}>
                         {file.type.includes("pdf") && <FileText className="h-6 w-6" />}
                         {file.type.includes("word") && <FileCode className="h-6 w-6" />}

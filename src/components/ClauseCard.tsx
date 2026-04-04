@@ -146,4 +146,3 @@ export default function ClauseCard({ clause, index }: ClauseCardProps) {
     </motion.div>
   );
 }
- 

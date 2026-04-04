@@ -87,7 +87,7 @@ export default function Analysis() {
 
       const { link } = await response.json();
       setShareLink(link);
-      
+
       // Copy to clipboard
       await navigator.clipboard.writeText(link);
     } catch (error) {
@@ -124,7 +124,7 @@ export default function Analysis() {
               <Download className="h-4 w-4" />
               Download Report
             </button>
-            <button 
+            <button
               onClick={handleShare}
               disabled={isSharing}
               className="flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-bold text-white shadow-md hover:bg-indigo-700 transition-all disabled:opacity-50"
@@ -145,7 +145,7 @@ export default function Analysis() {
         </div>
 
         {shareLink && (
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             className="mt-6 flex items-center justify-between rounded-2xl bg-emerald-50 p-4 border border-emerald-100"
@@ -159,7 +159,7 @@ export default function Analysis() {
                 <p className="text-xs text-emerald-700 font-medium truncate max-w-md">{shareLink}</p>
               </div>
             </div>
-            <button 
+            <button
               onClick={() => navigator.clipboard.writeText(shareLink)}
               className="text-sm font-bold text-emerald-700 hover:text-emerald-800 transition-colors"
             >
