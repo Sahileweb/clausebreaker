@@ -1,8 +1,10 @@
+import { GoogleGenAI, Type } from "@google/genai";
 import dotenv from "dotenv";
 dotenv.config();
 
-import { GoogleGenAI, Type } from "@google/genai";
-
+// ==========================================
+// MENTOR FEATURE: MULTIPLE API KEY ROTATION
+// ==========================================
 const keysString = process.env.GEMINI_API_KEYS || process.env.GEMINI_API_KEY || "";
 const apiKeys = keysString.split(",").map(key => key.trim()).filter(key => key.length > 0);
 
@@ -11,18 +13,15 @@ if (apiKeys.length === 0) {
 }
 
 const aiClients = apiKeys.map(key => new GoogleGenAI({ apiKey: key }));
-
 let currentClientIndex = 0;
 
 function getNextAiClient() {
   if (aiClients.length === 0) {
     throw new Error("Cannot process request: No API keys configured.");
   }
-  
   const client = aiClients[currentClientIndex];
   console.log(`[API Rotation] Routing request through Key #${currentClientIndex + 1} of ${aiClients.length}`);
   currentClientIndex = (currentClientIndex + 1) % aiClients.length;
-
   return client;
 }
 
@@ -51,24 +50,19 @@ export interface ComparisonResult {
   differences: Difference[];
   recommendation: string;
 }
-//  JSON CLEANING UTILITY 
+
+// JSON CLEANING UTILITY
 function cleanJsonResponse(rawText: string): string {
   let cleaned = rawText.trim();
-  if (cleaned.startsWith("```json")) {
-    cleaned = cleaned.replace(/^```json\n/, "");
-  } else if (cleaned.startsWith("```")) {
-    cleaned = cleaned.replace(/^```\n/, "");
-  }
-  if (cleaned.endsWith("```")) {
-    cleaned = cleaned.replace(/\n```$/, "");
-  }
+  if (cleaned.startsWith("```json")) cleaned = cleaned.replace(/^```json\n/, "");
+  else if (cleaned.startsWith("```")) cleaned = cleaned.replace(/^```\n/, "");
+  if (cleaned.endsWith("```")) cleaned = cleaned.replace(/\n```$/, "");
   return cleaned.trim();
 }
 
 export async function analyzeLegalDocument(text: string, language: string = "English"): Promise<AnalysisResult> {
   const model = "gemini-2.5-flash"; 
   
- // HALLUCINATION & CORRUPTED INPUT PREVENTION
   const prompt = `
     SYSTEM INSTRUCTIONS:
     You are an expert, highly strict legal AI assistant. Your ONLY job is to analyze the provided text.
@@ -133,14 +127,11 @@ export async function analyzeLegalDocument(text: string, language: string = "Eng
       throw new Error("No response from Gemini");
     }
 
-    // Safely clean the string before parsing
     const cleanedText = cleanJsonResponse(response.text);
     return JSON.parse(cleanedText);
 
   } catch (error) {
     console.error("Gemini Analysis Error:", error);
-    
- //  PLAIN TEXT FALLBACK
     return {
       summary: "System Error: The AI generated a response, but it could not be formatted correctly, or the document was unreadable. Please try again.",
       overallRisk: "high",
@@ -181,7 +172,7 @@ export async function compareLegalDocuments(text1: string, text2: string, langua
 
   try {
     const currentAi = getNextAiClient();
-   const response = await currentAi.models.generateContent({
+    const response = await currentAi.models.generateContent({
       model,
       contents: prompt,
       config: {
@@ -218,7 +209,6 @@ export async function compareLegalDocuments(text1: string, text2: string, langua
 
   } catch (error) {
     console.error("Gemini Comparison Error:", error);
-    // Graceful fallback for comparison route
     return {
       differences: [
         {
@@ -231,4 +221,35 @@ export async function compareLegalDocuments(text1: string, text2: string, langua
       recommendation: "Please try comparing the documents again or check if the text is corrupted."
     };
   }
+}
+
+// ==========================================
+// TEAMMATE'S NEW FEATURE: READ TEXT FROM IMAGES
+// ==========================================
+export async function extractTextFromImage(imageBuffer: Buffer, mimeType: string): Promise<string> {
+  const model = "gemini-2.5-flash";
+  const currentAi = getNextAiClient(); // Use rotation for this too!
+
+  const response = await currentAi.models.generateContent({
+    model,
+    contents: [
+      {
+        role: "user",
+        parts: [
+          { text: "Extract all text from this document accurately. Do not add any commentary, just provide the text found in the image." },
+          {
+            inlineData: {
+              data: imageBuffer.toString("base64"),
+              mimeType,
+            },
+          },
+        ],
+      },
+    ],
+  });
+  
+  if (!response.text) {
+    throw new Error("Failed to extract text from image");
+  }
+  return response.text;
 }
