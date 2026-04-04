@@ -1,10 +1,8 @@
-// import { GoogleGenAI, Type } from "@google/genai";
+import { GoogleGenAI, Type } from "@google/genai";
 import dotenv from "dotenv";
 dotenv.config();
 
-// ==========================================
-// MENTOR FEATURE: MULTIPLE API KEY ROTATION
-// ==========================================
+//  MULTIPLE API KEY ROTATION
 const keysString = process.env.GEMINI_API_KEYS || process.env.GEMINI_API_KEY || "";
 const apiKeys = keysString.split(",").map(key => key.trim()).filter(key => key.length > 0);
 
@@ -223,9 +221,9 @@ export async function compareLegalDocuments(text1: string, text2: string, langua
   }
 }
 
-// ==========================================
-// TEAMMATE'S NEW FEATURE: READ TEXT FROM IMAGES
-// ==========================================
+
+//  READ TEXT FROM IMAGES
+
 export async function extractTextFromImage(imageBuffer: Buffer, mimeType: string): Promise<string> {
   const model = "gemini-2.5-flash";
   const currentAi = getNextAiClient(); // Use rotation for this too!
