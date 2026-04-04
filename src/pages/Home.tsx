@@ -269,7 +269,7 @@ export default function Home() {
               <div className="mt-6 flex items-center gap-4">
                 <div className="h-12 w-12 rounded-full bg-indigo-700 border-2 border-indigo-500" />
                 <div>
-                  <p className="font-bold">Sahil Mundhe</p>
+                  <p className="font-bold">Electro</p>
                   <p className="text-sm opacity-70">Founder, ClauseBreaker AI</p>
                 </div>
               </div>
