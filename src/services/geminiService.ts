@@ -253,7 +253,8 @@ export async function extractTextFromImage(imageBuffer: Buffer, mimeType: string
 }
 
 export async function chatWithDocument(question: string, documentText: string, history: any[] = []): Promise<string> {
-  const model = "gemini-3.1-pro-preview";
+  const model = "gemini-2.5-flash";
+  const currentAi = getNextAiClient();
 
   const systemInstruction = `
     You are a legal document assistant.
@@ -266,7 +267,7 @@ export async function chatWithDocument(question: string, documentText: string, h
     ${documentText}
   `;
 
-  const chat = ai.chats.create({
+  const chat = currentAi.chats.create({
     model,
     config: {
       systemInstruction,
