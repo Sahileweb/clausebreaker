@@ -1,5 +1,5 @@
 import { useState, useRef } from "react";
-import { Upload, FileText, ArrowRight, Loader2, GitCompare, AlertCircle, CheckCircle2, ArrowLeft } from "lucide-react";
+import { Upload, FileText, ArrowRight, Loader2, GitCompare, AlertCircle, CheckCircle2, ArrowLeft, FileCode, ImageIcon } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { useNavigate } from "react-router-dom";
 import LanguageSelector from "../components/LanguageSelector";
@@ -42,7 +42,7 @@ export default function Comparison() {
       if (file1) {
         const formData = new FormData();
         formData.append("file", file1);
-        const parseResponse = await fetch("/api/parse-pdf", {
+        const parseResponse = await fetch("/api/parse-document", {
           method: "POST",
           body: formData,
         });
@@ -51,11 +51,11 @@ export default function Comparison() {
         content1 = parseData.text;
       }
 
-      // 2. Parse PDF 2 if uploaded
+      // 2. Parse File 2 if uploaded
       if (file2) {
         const formData = new FormData();
         formData.append("file", file2);
-        const parseResponse = await fetch("/api/parse-pdf", {
+        const parseResponse = await fetch("/api/parse-document", {
           method: "POST",
           body: formData,
         });
@@ -113,16 +113,26 @@ export default function Comparison() {
                     file1 ? "border-indigo-500 bg-indigo-50/50" : "border-gray-200 bg-gray-50 hover:border-indigo-400 hover:bg-white"
                   )}
                 >
-                  <input type="file" ref={file1InputRef} onChange={(e) => e.target.files?.[0] && setFile1(e.target.files[0])} accept=".pdf" className="hidden" />
+                  <input type="file" ref={file1InputRef} onChange={(e) => e.target.files?.[0] && setFile1(e.target.files[0])} accept=".pdf,.docx,image/*" className="hidden" />
                   {file1 ? (
                     <div className="flex flex-col items-center text-center">
-                      <FileText className="h-8 w-8 text-indigo-600" />
-                      <p className="mt-2 text-sm font-semibold text-gray-900">{file1.name}</p>
+                      <div className={cn(
+                        "flex h-8 w-8 items-center justify-center rounded-lg text-white mb-2",
+                        file1.type.includes("pdf") ? "bg-rose-500" :
+                        file1.type.includes("word") ? "bg-blue-500" :
+                        file1.type.startsWith("image/") ? "bg-emerald-500" : "bg-indigo-500"
+                      )}>
+                        {file1.type.includes("pdf") && <FileText className="h-5 w-5" />}
+                        {file1.type.includes("word") && <FileCode className="h-5 w-5" />}
+                        {file1.type.startsWith("image/") && <ImageIcon className="h-5 w-5" />}
+                        {(!file1.type.includes("pdf") && !file1.type.includes("word") && !file1.type.startsWith("image/")) && <FileText className="h-5 w-5" />}
+                      </div>
+                      <p className="mt-2 text-sm font-semibold text-gray-900 px-4 truncate max-w-full">{file1.name}</p>
                     </div>
                   ) : (
                     <div className="flex flex-col items-center text-center">
                       <Upload className="h-8 w-8 text-gray-400" />
-                      <p className="mt-2 text-sm font-semibold text-gray-900">Upload PDF</p>
+                      <p className="mt-2 text-sm font-semibold text-gray-900">Upload Doc (PDF/DOCX/IMG)</p>
                     </div>
                   )}
                 </div>
@@ -150,16 +160,26 @@ export default function Comparison() {
                     file2 ? "border-indigo-500 bg-indigo-50/50" : "border-gray-200 bg-gray-50 hover:border-indigo-400 hover:bg-white"
                   )}
                 >
-                  <input type="file" ref={file2InputRef} onChange={(e) => e.target.files?.[0] && setFile2(e.target.files[0])} accept=".pdf" className="hidden" />
+                  <input type="file" ref={file2InputRef} onChange={(e) => e.target.files?.[0] && setFile2(e.target.files[0])} accept=".pdf,.docx,image/*" className="hidden" />
                   {file2 ? (
                     <div className="flex flex-col items-center text-center">
-                      <FileText className="h-8 w-8 text-indigo-600" />
-                      <p className="mt-2 text-sm font-semibold text-gray-900">{file2.name}</p>
+                      <div className={cn(
+                        "flex h-8 w-8 items-center justify-center rounded-lg text-white mb-2",
+                        file2.type.includes("pdf") ? "bg-rose-500" :
+                        file2.type.includes("word") ? "bg-blue-500" :
+                        file2.type.startsWith("image/") ? "bg-emerald-500" : "bg-indigo-500"
+                      )}>
+                        {file2.type.includes("pdf") && <FileText className="h-5 w-5" />}
+                        {file2.type.includes("word") && <FileCode className="h-5 w-5" />}
+                        {file2.type.startsWith("image/") && <ImageIcon className="h-5 w-5" />}
+                        {(!file2.type.includes("pdf") && !file2.type.includes("word") && !file2.type.startsWith("image/")) && <FileText className="h-5 w-5" />}
+                      </div>
+                      <p className="mt-2 text-sm font-semibold text-gray-900 px-4 truncate max-w-full">{file2.name}</p>
                     </div>
                   ) : (
                     <div className="flex flex-col items-center text-center">
                       <Upload className="h-8 w-8 text-gray-400" />
-                      <p className="mt-2 text-sm font-semibold text-gray-900">Upload PDF</p>
+                      <p className="mt-2 text-sm font-semibold text-gray-900">Upload Doc (PDF/DOCX/IMG)</p>
                     </div>
                   )}
                 </div>

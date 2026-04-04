@@ -1,4 +1,5 @@
-import { analyzeLegalDocument } from "./src/services/geminiService"; // Adjust the path if needed
+import { analyzeLegalDocument, extractTextFromImage } from "./src/services/geminiService"; // Adjust the path if needed
+import * as mammoth from "mammoth";
 console.log(">>> server.ts is being executed at " + new Date().toISOString());
 import express from "express";
 import { createServer as createViteServer } from "vite";
@@ -30,70 +31,33 @@ async function startServer() {
   // Configure multer for file uploads
   const upload = multer({ storage: multer.memoryStorage() });
 
-  // API Route for PDF parsing
-  app.post("/api/parse-pdf", upload.single("file"), async (req, res) => {
+  // API Route for multi-format document parsing
+  app.post("/api/parse-document", upload.single("file"), async (req, res) => {
     try {
       if (!req.file) {
         return res.status(400).json({ error: "No file uploaded" });
       }
 
-      // Lazy load pdf-parse to speed up initial server startup
-      const pdfModule = require("pdf-parse");
+      const mimeType = req.file.mimetype;
       let text = "";
 
-      try {
-        if (typeof pdfModule === 'function') {
-          // Try as a regular function (v1.1.1 style)
-          try {
-            const data = await pdfModule(req.file.buffer);
-            text = data.text;
-          } catch (e) {
-            // If it's a class, calling it as a function might fail
-            if (pdfModule.name === 'PDFParse' || e instanceof TypeError) {
-              const parser = new pdfModule({ data: req.file.buffer });
-              const data = await parser.getText();
-              text = data.text;
-              if (parser.destroy) await parser.destroy();
-            } else {
-              throw e;
-            }
-          }
-        } else if (pdfModule.PDFParse) {
-          // New API (v2.4.5 style)
-          const parser = new pdfModule.PDFParse({ data: req.file.buffer });
-          const data = await parser.getText();
-          text = data.text;
-          if (parser.destroy) await parser.destroy();
-        } else if (pdfModule.default) {
-          const def = pdfModule.default;
-          if (typeof def === 'function') {
-            try {
-              const data = await def(req.file.buffer);
-              text = data.text;
-            } catch (e) {
-              const parser = new def({ data: req.file.buffer });
-              const data = await parser.getText();
-              text = data.text;
-              if (parser.destroy) await parser.destroy();
-            }
-          } else if (def.PDFParse) {
-            const parser = new def.PDFParse({ data: req.file.buffer });
-            const data = await parser.getText();
-            text = data.text;
-            if (parser.destroy) await parser.destroy();
-          }
-        } else {
-          throw new Error("Could not find a valid PDF parser in the module");
-        }
-      } catch (err) {
-        console.error("PDF parsing error details:", err);
-        throw new Error(`PDF parsing failed: ${err instanceof Error ? err.message : String(err)}`);
+      if (mimeType === "application/pdf") {
+        const pdfModule = require("pdf-parse");
+        const data = await pdfModule(req.file.buffer);
+        text = data.text;
+      } else if (mimeType === "application/vnd.openxmlformats-officedocument.wordprocessingml.document") {
+        const result = await mammoth.extractRawText({ buffer: req.file.buffer });
+        text = result.value;
+      } else if (mimeType.startsWith("image/")) {
+        text = await extractTextFromImage(req.file.buffer, mimeType);
+      } else {
+        return res.status(400).json({ error: `Unsupported file type: ${mimeType}` });
       }
 
       res.json({ text });
     } catch (error) {
-      console.error("PDF parsing error:", error);
-      res.status(500).json({ error: "Failed to parse PDF" });
+      console.error("Document parsing error:", error);
+      res.status(500).json({ error: "Failed to parse document" });
     }
   });
 

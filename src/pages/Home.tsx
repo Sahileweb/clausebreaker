@@ -1,5 +1,5 @@
 import React, { useState, useRef } from "react";
-import { Upload, FileText, ArrowRight, Loader2, CheckCircle2, ShieldCheck, Zap } from "lucide-react";
+import { Upload, FileText, ArrowRight, Loader2, CheckCircle2, ShieldCheck, Zap, FileCode, ImageIcon } from "lucide-react";
 import { motion } from "motion/react";
 import { useNavigate } from "react-router-dom";
 import LanguageSelector from "../components/LanguageSelector";
@@ -31,13 +31,13 @@ export default function Home() {
       if (file) {
         const formData = new FormData();
         formData.append("file", file);
-        const parseResponse = await fetch("/api/parse-pdf", {
+        const parseResponse = await fetch("/api/parse-document", {
           method: "POST",
           body: formData,
         });
 
         if (!parseResponse.ok) {
-          throw new Error("Failed to parse PDF document");
+          throw new Error("Failed to parse document");
         }
 
         const parseData = await parseResponse.json();
@@ -144,13 +144,21 @@ export default function Home() {
                     type="file"
                     ref={fileInputRef}
                     onChange={handleFileChange}
-                    accept=".pdf"
+                    accept=".pdf,.docx,image/*"
                     className="hidden"
                   />
                   {file ? (
                     <div className="flex flex-col items-center text-center">
-                      <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-indigo-600 text-white shadow-lg">
-                        <FileText className="h-6 w-6" />
+                      <div className={cn(
+                        "flex h-12 w-12 items-center justify-center rounded-xl text-white shadow-lg",
+                        file.type.includes("pdf") ? "bg-rose-600" : 
+                        file.type.includes("word") ? "bg-blue-600" : 
+                        file.type.startsWith("image/") ? "bg-emerald-600" : "bg-indigo-600"
+                      )}>
+                        {file.type.includes("pdf") && <FileText className="h-6 w-6" />}
+                        {file.type.includes("word") && <FileCode className="h-6 w-6" />}
+                        {file.type.startsWith("image/") && <ImageIcon className="h-6 w-6" />}
+                        {(!file.type.includes("pdf") && !file.type.includes("word") && !file.type.startsWith("image/")) && <FileText className="h-6 w-6" />}
                       </div>
                       <p className="mt-4 text-sm font-semibold text-gray-900">{file.name}</p>
                       <p className="mt-1 text-xs text-gray-500">{(file.size / 1024 / 1024).toFixed(2)} MB</p>
@@ -166,8 +174,8 @@ export default function Home() {
                       <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gray-200 text-gray-500">
                         <Upload className="h-6 w-6" />
                       </div>
-                      <p className="mt-4 text-sm font-semibold text-gray-900">Upload PDF Document</p>
-                      <p className="mt-1 text-xs text-gray-500">Drag and drop or click to browse</p>
+                      <p className="mt-4 text-sm font-semibold text-gray-900">Upload Document</p>
+                      <p className="mt-1 text-xs text-gray-500">PDF, DOCX, or Images</p>
                     </div>
                   )}
                 </div>
