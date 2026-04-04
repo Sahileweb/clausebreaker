@@ -25,7 +25,7 @@ export default function Comparison() {
   const [language, setLanguage] = useState("English");
   const [isLoading, setIsLoading] = useState(false);
   const [result, setResult] = useState<ComparisonResult | null>(null);
-  
+
   const file1InputRef = useRef<HTMLInputElement>(null);
   const file2InputRef = useRef<HTMLInputElement>(null);
   const navigate = useNavigate();
