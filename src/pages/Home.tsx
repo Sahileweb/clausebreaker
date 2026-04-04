@@ -1,5 +1,5 @@
 import React, { useState, useRef } from "react";
-import { Upload, FileText, ArrowRight, Loader2, CheckCircle2, ShieldCheck, Zap } from "lucide-react";
+import { Upload, FileText, ArrowRight, Loader2, CheckCircle2, ShieldCheck, Zap, FileCode, ImageIcon } from "lucide-react";
 import { motion } from "motion/react";
 import { useNavigate } from "react-router-dom";
 import LanguageSelector from "../components/LanguageSelector";
@@ -31,21 +31,21 @@ export default function Home() {
       if (file) {
         const formData = new FormData();
         formData.append("file", file);
-        const parseResponse = await fetch("/api/parse-pdf", {
+        const parseResponse = await fetch("/api/parse-document", {
           method: "POST",
           body: formData,
         });
-        
+
         if (!parseResponse.ok) {
-          throw new Error("Failed to parse PDF document");
+          throw new Error("Failed to parse document");
         }
-        
+
         const parseData = await parseResponse.json();
         contentToAnalyze = parseData.text;
       }
 
 
-    // 2. Send the content to the backend for analysis
+      // 2. Send the content to the backend for analysis
       const analyzeResponse = await fetch("http://localhost:3000/api/analyze", {
         method: "POST",
         headers: {
@@ -59,7 +59,7 @@ export default function Home() {
       }
 
       const result = await analyzeResponse.json();
-      
+
       // Store results in session storage for the analysis page
       sessionStorage.setItem("analysisResult", JSON.stringify(result));
       navigate("/analysis");
@@ -124,9 +124,9 @@ export default function Home() {
             <div className="rounded-3xl bg-white p-8 shadow-xl shadow-indigo-100/50 border border-indigo-50">
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-xl font-bold text-gray-900">Input Legal Text</h2>
-                <LanguageSelector 
-                  selectedLanguage={language} 
-                  onLanguageChange={setLanguage} 
+                <LanguageSelector
+                  selectedLanguage={language}
+                  onLanguageChange={setLanguage}
                 />
               </div>
 
@@ -135,8 +135,8 @@ export default function Home() {
                   onClick={() => fileInputRef.current?.click()}
                   className={cn(
                     "relative flex h-48 cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed transition-all",
-                    file 
-                      ? "border-indigo-500 bg-indigo-50/50" 
+                    file
+                      ? "border-indigo-500 bg-indigo-50/50"
                       : "border-gray-200 bg-gray-50 hover:border-indigo-400 hover:bg-white"
                   )}
                 >
@@ -144,17 +144,25 @@ export default function Home() {
                     type="file"
                     ref={fileInputRef}
                     onChange={handleFileChange}
-                    accept=".pdf"
+                    accept=".pdf,.docx,image/*"
                     className="hidden"
                   />
                   {file ? (
                     <div className="flex flex-col items-center text-center">
-                      <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-indigo-600 text-white shadow-lg">
-                        <FileText className="h-6 w-6" />
+                      <div className={cn(
+                        "flex h-12 w-12 items-center justify-center rounded-xl text-white shadow-lg",
+                        file.type.includes("pdf") ? "bg-rose-600" : 
+                        file.type.includes("word") ? "bg-blue-600" : 
+                        file.type.startsWith("image/") ? "bg-emerald-600" : "bg-indigo-600"
+                      )}>
+                        {file.type.includes("pdf") && <FileText className="h-6 w-6" />}
+                        {file.type.includes("word") && <FileCode className="h-6 w-6" />}
+                        {file.type.startsWith("image/") && <ImageIcon className="h-6 w-6" />}
+                        {(!file.type.includes("pdf") && !file.type.includes("word") && !file.type.startsWith("image/")) && <FileText className="h-6 w-6" />}
                       </div>
                       <p className="mt-4 text-sm font-semibold text-gray-900">{file.name}</p>
                       <p className="mt-1 text-xs text-gray-500">{(file.size / 1024 / 1024).toFixed(2)} MB</p>
-                      <button 
+                      <button
                         onClick={(e) => { e.stopPropagation(); setFile(null); }}
                         className="mt-4 text-xs font-bold text-rose-500 hover:underline"
                       >
@@ -166,8 +174,8 @@ export default function Home() {
                       <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gray-200 text-gray-500">
                         <Upload className="h-6 w-6" />
                       </div>
-                      <p className="mt-4 text-sm font-semibold text-gray-900">Upload PDF Document</p>
-                      <p className="mt-1 text-xs text-gray-500">Drag and drop or click to browse</p>
+                      <p className="mt-4 text-sm font-semibold text-gray-900">Upload Document</p>
+                      <p className="mt-1 text-xs text-gray-500">PDF, DOCX, or Images</p>
                     </div>
                   )}
                 </div>
