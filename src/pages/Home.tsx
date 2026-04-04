@@ -35,17 +35,17 @@ export default function Home() {
           method: "POST",
           body: formData,
         });
-        
+
         if (!parseResponse.ok) {
           throw new Error("Failed to parse PDF document");
         }
-        
+
         const parseData = await parseResponse.json();
         contentToAnalyze = parseData.text;
       }
 
 
-    // 2. Send the content to the backend for analysis
+      // 2. Send the content to the backend for analysis
       const analyzeResponse = await fetch("http://localhost:3000/api/analyze", {
         method: "POST",
         headers: {
@@ -59,7 +59,7 @@ export default function Home() {
       }
 
       const result = await analyzeResponse.json();
-      
+
       // Store results in session storage for the analysis page
       sessionStorage.setItem("analysisResult", JSON.stringify(result));
       navigate("/analysis");
@@ -124,9 +124,9 @@ export default function Home() {
             <div className="rounded-3xl bg-white p-8 shadow-xl shadow-indigo-100/50 border border-indigo-50">
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-xl font-bold text-gray-900">Input Legal Text</h2>
-                <LanguageSelector 
-                  selectedLanguage={language} 
-                  onLanguageChange={setLanguage} 
+                <LanguageSelector
+                  selectedLanguage={language}
+                  onLanguageChange={setLanguage}
                 />
               </div>
 
@@ -135,8 +135,8 @@ export default function Home() {
                   onClick={() => fileInputRef.current?.click()}
                   className={cn(
                     "relative flex h-48 cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed transition-all",
-                    file 
-                      ? "border-indigo-500 bg-indigo-50/50" 
+                    file
+                      ? "border-indigo-500 bg-indigo-50/50"
                       : "border-gray-200 bg-gray-50 hover:border-indigo-400 hover:bg-white"
                   )}
                 >
@@ -154,7 +154,7 @@ export default function Home() {
                       </div>
                       <p className="mt-4 text-sm font-semibold text-gray-900">{file.name}</p>
                       <p className="mt-1 text-xs text-gray-500">{(file.size / 1024 / 1024).toFixed(2)} MB</p>
-                      <button 
+                      <button
                         onClick={(e) => { e.stopPropagation(); setFile(null); }}
                         className="mt-4 text-xs font-bold text-rose-500 hover:underline"
                       >

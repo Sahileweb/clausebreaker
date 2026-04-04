@@ -33,11 +33,11 @@
 
 // export async function analyzeLegalDocument(text: string, language: string = "English"): Promise<AnalysisResult> {
 //   const model = "gemini-3-flash-preview";
-  
+
 //   const prompt = `
 //     Analyze the following legal document text and provide a comprehensive breakdown.
 //     The output must be in ${language}.
-    
+
 //     1. Provide a concise summary of the document.
 //     2. Determine the overall risk level (low, medium, or high).
 //     3. Identify key clauses and for each:
@@ -90,11 +90,11 @@
 
 // export async function compareLegalDocuments(text1: string, text2: string, language: string = "English"): Promise<ComparisonResult> {
 //   const model = "gemini-3-flash-preview";
-  
+
 //   const prompt = `
 //     Compare the following two legal documents and highlight key differences.
 //     The output must be in ${language}.
-    
+
 //     1. Identify key topics/clauses that have changed.
 //     2. For each difference:
 //        - Specify the topic.
@@ -146,6 +146,8 @@
 // }
 
 import { GoogleGenAI, Type } from "@google/genai";
+import dotenv from "dotenv";
+dotenv.config();
 
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || "" });
 
@@ -177,8 +179,8 @@ export interface ComparisonResult {
 
 export async function analyzeLegalDocument(text: string, language: string = "English"): Promise<AnalysisResult> {
   // Changed from gemini-3-flash-preview to a universally supported model
-  const model = "gemini-2.5-flash"; 
-  
+  const model = "gemini-2.5-flash";
+
   const prompt = `
     Analyze the following legal document text and provide a comprehensive breakdown.
     The output must be in ${language}.
@@ -235,7 +237,7 @@ export async function analyzeLegalDocument(text: string, language: string = "Eng
 
 export async function compareLegalDocuments(text1: string, text2: string, language: string = "English"): Promise<ComparisonResult> {
   const model = "gemini-2.5-flash";
-  
+
   const prompt = `
     Compare the following two legal documents and highlight key differences.
     The output must be in ${language}.
