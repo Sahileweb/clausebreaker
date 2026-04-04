@@ -1,30 +1,8 @@
+import { GoogleGenAI, Type } from "@google/genai";
 import dotenv from "dotenv";
 dotenv.config();
 
-import { GoogleGenAI, Type } from "@google/genai";
-
-const keysString = process.env.GEMINI_API_KEYS || process.env.GEMINI_API_KEY || "";
-const apiKeys = keysString.split(",").map(key => key.trim()).filter(key => key.length > 0);
-
-if (apiKeys.length === 0) {
-  console.error("CRITICAL ERROR: No Gemini API keys found in .env file.");
-}
-
-const aiClients = apiKeys.map(key => new GoogleGenAI({ apiKey: key }));
-
-let currentClientIndex = 0;
-
-function getNextAiClient() {
-  if (aiClients.length === 0) {
-    throw new Error("Cannot process request: No API keys configured.");
-  }
-  
-  const client = aiClients[currentClientIndex];
-  console.log(`[API Rotation] Routing request through Key #${currentClientIndex + 1} of ${aiClients.length}`);
-  currentClientIndex = (currentClientIndex + 1) % aiClients.length;
-
-  return client;
-}
+const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || "" });
 
 export interface Clause {
   text: string;
@@ -51,36 +29,12 @@ export interface ComparisonResult {
   differences: Difference[];
   recommendation: string;
 }
-//  JSON CLEANING UTILITY 
-function cleanJsonResponse(rawText: string): string {
-  let cleaned = rawText.trim();
-  if (cleaned.startsWith("```json")) {
-    cleaned = cleaned.replace(/^```json\n/, "");
-  } else if (cleaned.startsWith("```")) {
-    cleaned = cleaned.replace(/^```\n/, "");
-  }
-  if (cleaned.endsWith("```")) {
-    cleaned = cleaned.replace(/\n```$/, "");
-  }
-  return cleaned.trim();
-}
 
 export async function analyzeLegalDocument(text: string, language: string = "English"): Promise<AnalysisResult> {
-  const model = "gemini-2.5-flash"; 
-  
- // HALLUCINATION & CORRUPTED INPUT PREVENTION
+  // Changed from gemini-3-flash-preview to a universally supported model
+  const model = "gemini-2.5-flash";
+
   const prompt = `
-    SYSTEM INSTRUCTIONS:
-    You are an expert, highly strict legal AI assistant. Your ONLY job is to analyze the provided text.
-    
-    CRITICAL RULES:
-    1. ZERO HALLUCINATION: You must ONLY use the provided document text. Do not invent, assume, or add outside legal clauses.
-    2. CORRUPTED/NON-LEGAL TEXT: Evaluate the text first. If the text is corrupted, gibberish, a recipe, a random story, or clearly NOT a legal/contractual document, you MUST output a JSON response where:
-       - "summary" is EXACTLY: "ERROR: The provided text does not appear to be a valid legal document or is too corrupted to read."
-       - "overallRisk" is "high"
-       - "clauses" is an empty array []
-    
-    TASK:
     Analyze the following legal document text and provide a comprehensive breakdown.
     The output must be in ${language}.
     
@@ -97,69 +51,74 @@ export async function analyzeLegalDocument(text: string, language: string = "Eng
     ${text}
   `;
 
-  try {
-    const currentAi = getNextAiClient();
-    const response = await currentAi.models.generateContent({
-      model,
-      contents: prompt,
-      config: {
-        responseMimeType: "application/json",
-        responseSchema: {
-          type: Type.OBJECT,
-          properties: {
-            summary: { type: Type.STRING },
-            overallRisk: { type: Type.STRING, enum: ["low", "medium", "high"] },
-            clauses: {
-              type: Type.ARRAY,
-              items: {
-                type: Type.OBJECT,
-                properties: {
-                  text: { type: Type.STRING },
-                  simplified: { type: Type.STRING },
-                  risk: { type: Type.STRING, enum: ["low", "medium", "high"] },
-                  explanation: { type: Type.STRING },
-                  suggestion: { type: Type.STRING },
-                },
-                required: ["text", "simplified", "risk", "explanation", "suggestion"],
+  const response = await ai.models.generateContent({
+    model,
+    contents: prompt,
+    config: {
+      responseMimeType: "application/json",
+      responseSchema: {
+        type: Type.OBJECT,
+        properties: {
+          summary: { type: Type.STRING },
+          overallRisk: { type: Type.STRING, enum: ["low", "medium", "high"] },
+          clauses: {
+            type: Type.ARRAY,
+            items: {
+              type: Type.OBJECT,
+              properties: {
+                text: { type: Type.STRING },
+                simplified: { type: Type.STRING },
+                risk: { type: Type.STRING, enum: ["low", "medium", "high"] },
+                explanation: { type: Type.STRING },
+                suggestion: { type: Type.STRING },
               },
+              required: ["text", "simplified", "risk", "explanation", "suggestion"],
             },
           },
-          required: ["summary", "overallRisk", "clauses"],
         },
+        required: ["summary", "overallRisk", "clauses"],
       },
-    });
+    },
+  });
 
-    if (!response.text) {
-      throw new Error("No response from Gemini");
-    }
-
-    // Safely clean the string before parsing
-    const cleanedText = cleanJsonResponse(response.text);
-    return JSON.parse(cleanedText);
-
-  } catch (error) {
-    console.error("Gemini Analysis Error:", error);
-    
- //  PLAIN TEXT FALLBACK
-    return {
-      summary: "System Error: The AI generated a response, but it could not be formatted correctly, or the document was unreadable. Please try again.",
-      overallRisk: "high",
-      clauses: [
-        {
-          text: "N/A",
-          simplified: "The system encountered an error processing this document.",
-          risk: "high",
-          explanation: "This usually happens if the document is too large, the text is corrupted, or the AI service timed out.",
-          suggestion: "Try uploading a clearer PDF or pasting smaller sections of text."
-        }
-      ]
-    };
+  if (!response.text) {
+    throw new Error("No response from Gemini");
   }
+
+  return JSON.parse(response.text);
+}
+
+export async function extractTextFromImage(imageBuffer: Buffer, mimeType: string): Promise<string> {
+  const model = "gemini-2.5-flash";
+
+  const response = await ai.models.generateContent({
+    model,
+    contents: [
+      {
+        role: "user",
+        parts: [
+          { text: "Extract all text from this document accurately. Do not add any commentary, just provide the text found in the image." },
+          {
+            inlineData: {
+              data: imageBuffer.toString("base64"),
+              mimeType,
+            },
+          },
+        ],
+      },
+    ],
+  });
+
+  if (!response.text) {
+    throw new Error("Failed to extract text from image");
+  }
+
+  return response.text;
 }
 
 export async function compareLegalDocuments(text1: string, text2: string, language: string = "English"): Promise<ComparisonResult> {
   const model = "gemini-2.5-flash";
-  
+
   const prompt = `
     Compare the following two legal documents and highlight key differences.
     The output must be in ${language}.
@@ -179,56 +138,37 @@ export async function compareLegalDocuments(text1: string, text2: string, langua
     ${text2}
   `;
 
-  try {
-    const currentAi = getNextAiClient();
-   const response = await currentAi.models.generateContent({
-      model,
-      contents: prompt,
-      config: {
-        responseMimeType: "application/json",
-        responseSchema: {
-          type: Type.OBJECT,
-          properties: {
-            differences: {
-              type: Type.ARRAY,
-              items: {
-                type: Type.OBJECT,
-                properties: {
-                  topic: { type: Type.STRING },
-                  doc1Value: { type: Type.STRING },
-                  doc2Value: { type: Type.STRING },
-                  impact: { type: Type.STRING },
-                },
-                required: ["topic", "doc1Value", "doc2Value", "impact"],
+  const response = await ai.models.generateContent({
+    model,
+    contents: prompt,
+    config: {
+      responseMimeType: "application/json",
+      responseSchema: {
+        type: Type.OBJECT,
+        properties: {
+          differences: {
+            type: Type.ARRAY,
+            items: {
+              type: Type.OBJECT,
+              properties: {
+                topic: { type: Type.STRING },
+                doc1Value: { type: Type.STRING },
+                doc2Value: { type: Type.STRING },
+                impact: { type: Type.STRING },
               },
+              required: ["topic", "doc1Value", "doc2Value", "impact"],
             },
-            recommendation: { type: Type.STRING },
           },
-          required: ["differences", "recommendation"],
+          recommendation: { type: Type.STRING },
         },
+        required: ["differences", "recommendation"],
       },
-    });
+    },
+  });
 
-    if (!response.text) {
-      throw new Error("No response from Gemini");
-    }
-
-    const cleanedText = cleanJsonResponse(response.text);
-    return JSON.parse(cleanedText);
-
-  } catch (error) {
-    console.error("Gemini Comparison Error:", error);
-    // Graceful fallback for comparison route
-    return {
-      differences: [
-        {
-          topic: "Processing Error",
-          doc1Value: "N/A",
-          doc2Value: "N/A",
-          impact: "The documents could not be compared due to a system or formatting error."
-        }
-      ],
-      recommendation: "Please try comparing the documents again or check if the text is corrupted."
-    };
+  if (!response.text) {
+    throw new Error("No response from Gemini");
   }
+
+  return JSON.parse(response.text);
 }

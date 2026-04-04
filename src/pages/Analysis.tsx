@@ -22,6 +22,8 @@ interface AnalysisResult {
 
 export default function Analysis() {
   const [result, setResult] = useState<AnalysisResult | null>(null);
+  const [isSharing, setIsSharing] = useState(false);
+  const [shareLink, setShareLink] = useState<string | null>(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -59,7 +61,7 @@ export default function Analysis() {
       Actionable Advice: ${c.suggestion}
       `).join("\n")}
     `;
-    
+
     const blob = new Blob([content], { type: "text/plain" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
@@ -67,6 +69,33 @@ export default function Analysis() {
     a.download = "legal_analysis.txt";
     a.click();
     URL.revokeObjectURL(url);
+  };
+
+  const handleShare = async () => {
+    if (!result) return;
+    setIsSharing(true);
+    setShareLink(null);
+
+    try {
+      const response = await fetch("/api/share", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(result),
+      });
+
+      if (!response.ok) throw new Error("Failed to generate share link");
+
+      const { link } = await response.json();
+      setShareLink(link);
+      
+      // Copy to clipboard
+      await navigator.clipboard.writeText(link);
+    } catch (error) {
+      console.error('Error sharing:', error);
+      alert("Failed to create shareable link. Please try again.");
+    } finally {
+      setIsSharing(false);
+    }
   };
 
   return (
@@ -88,19 +117,56 @@ export default function Analysis() {
           </div>
 
           <div className="flex items-center gap-3">
-            <button 
+            <button
               onClick={handleDownload}
               className="flex items-center gap-2 rounded-xl bg-white px-4 py-2.5 text-sm font-bold text-gray-700 shadow-sm border border-gray-200 hover:bg-gray-50 transition-all"
             >
               <Download className="h-4 w-4" />
               Download Report
             </button>
-            <button className="flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-bold text-white shadow-md hover:bg-indigo-700 transition-all">
-              <Share2 className="h-4 w-4" />
-              Share Analysis
+            <button 
+              onClick={handleShare}
+              disabled={isSharing}
+              className="flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-bold text-white shadow-md hover:bg-indigo-700 transition-all disabled:opacity-50"
+            >
+              {isSharing ? (
+                <>
+                  <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                  Generating Link...
+                </>
+              ) : (
+                <>
+                  <Share2 className="h-4 w-4" />
+                  Share Analysis
+                </>
+              )}
             </button>
           </div>
         </div>
+
+        {shareLink && (
+          <motion.div 
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mt-6 flex items-center justify-between rounded-2xl bg-emerald-50 p-4 border border-emerald-100"
+          >
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-500 text-white">
+                <CheckCircle2 className="h-6 w-6" />
+              </div>
+              <div>
+                <p className="text-sm font-bold text-emerald-900">Share Link Generated & Copied!</p>
+                <p className="text-xs text-emerald-700 font-medium truncate max-w-md">{shareLink}</p>
+              </div>
+            </div>
+            <button 
+              onClick={() => navigator.clipboard.writeText(shareLink)}
+              className="text-sm font-bold text-emerald-700 hover:text-emerald-800 transition-colors"
+            >
+              Copy Again
+            </button>
+          </motion.div>
+        )}
 
         {/* Overview Stats */}
         <div className="mt-8 grid grid-cols-1 gap-6 md:grid-cols-4">
@@ -195,8 +261,8 @@ export default function Analysis() {
                       <span className="text-rose-600">{Math.round((riskCounts.high / result.clauses.length) * 100)}%</span>
                     </div>
                     <div className="h-2 w-full bg-gray-100 rounded-full overflow-hidden">
-                      <div 
-                        className="h-full bg-rose-500 rounded-full" 
+                      <div
+                        className="h-full bg-rose-500 rounded-full"
                         style={{ width: `${(riskCounts.high / result.clauses.length) * 100}%` }}
                       />
                     </div>
@@ -207,8 +273,8 @@ export default function Analysis() {
                       <span className="text-amber-600">{Math.round((riskCounts.medium / result.clauses.length) * 100)}%</span>
                     </div>
                     <div className="h-2 w-full bg-gray-100 rounded-full overflow-hidden">
-                      <div 
-                        className="h-full bg-amber-500 rounded-full" 
+                      <div
+                        className="h-full bg-amber-500 rounded-full"
                         style={{ width: `${(riskCounts.medium / result.clauses.length) * 100}%` }}
                       />
                     </div>
@@ -219,8 +285,8 @@ export default function Analysis() {
                       <span className="text-emerald-600">{Math.round((riskCounts.low / result.clauses.length) * 100)}%</span>
                     </div>
                     <div className="h-2 w-full bg-gray-100 rounded-full overflow-hidden">
-                      <div 
-                        className="h-full bg-emerald-500 rounded-full" 
+                      <div
+                        className="h-full bg-emerald-500 rounded-full"
                         style={{ width: `${(riskCounts.low / result.clauses.length) * 100}%` }}
                       />
                     </div>
