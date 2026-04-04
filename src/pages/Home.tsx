@@ -59,7 +59,7 @@ export default function Home() {
       }
 
       const result = await analyzeResponse.json();
-
+      sessionStorage.setItem("documentText", contentToAnalyze);
       // Store results in session storage for the analysis page
       sessionStorage.setItem("analysisResult", JSON.stringify(result));
       navigate("/analysis");

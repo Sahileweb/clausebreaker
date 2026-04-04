@@ -5,7 +5,7 @@ import { motion } from "motion/react";
 import ClauseCard from "../components/ClauseCard";
 import RiskBadge from "../components/RiskBadge";
 import { cn } from "@/src/lib/utils";
-
+import ChatSection from "../components/ChatSection"; 
 interface Clause {
   text: string;
   simplified: string;
@@ -24,6 +24,7 @@ export default function Analysis() {
   const [result, setResult] = useState<AnalysisResult | null>(null);
   const [isSharing, setIsSharing] = useState(false);
   const [shareLink, setShareLink] = useState<string | null>(null);
+  const rawDocumentText = sessionStorage.getItem("documentText") || "";
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -317,6 +318,7 @@ export default function Analysis() {
               ))}
             </div>
           </div>
+          <ChatSection documentText={rawDocumentText} />
         </div>
       </div>
     </div>

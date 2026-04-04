@@ -41,12 +41,23 @@ export default function ChatSection({ documentText }: ChatSectionProps) {
         parts: [{ text: m.text }],
       }));
 
-      // 2. Call the Gemini service directly from the frontend
-      const { chatWithDocument } = await import("../services/geminiService");
-      const answer = await chatWithDocument(input, documentText, history);
-      
-      const botMessage: Message = { role: "model", text: answer };
+      // 2. Safely call the backend server API instead of the file directly
+      const response = await fetch("/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          question: input,
+          documentText: documentText,
+          history: history
+        }),
+      });
+
+      if (!response.ok) throw new Error("Chat request failed");
+
+      const data = await response.json();
+      const botMessage: Message = { role: "model", text: data.answer };
       setMessages((prev) => [...prev, botMessage]);
+      
     } catch (error) {
       console.error("Chat error:", error);
       const errorMessage: Message = { 

@@ -205,7 +205,7 @@
 import dotenv from "dotenv";
 dotenv.config(); // THIS FIXES THE MONGODB SHARE CRASH!
 
-import { analyzeLegalDocument, extractTextFromImage } from "./src/services/geminiService";
+import { analyzeLegalDocument, extractTextFromImage, chatWithDocument } from "./src/services/geminiService";
 import * as mammoth from "mammoth";
 console.log(">>> server.ts is being executed at " + new Date().toISOString());
 import express from "express";
@@ -226,8 +226,8 @@ async function startServer() {
   const PORT = 3000;
 
   app.use(cors());
-  app.use(express.json());
-
+  app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ limit: '50mb', extended: true }));
   // Connect to MongoDB
   const MONGO_URI = process.env.MONGODB_URI || "mongodb://localhost:27017/clausebreaker";
   mongoose.connect(MONGO_URI)
@@ -296,6 +296,23 @@ async function startServer() {
     }
   });
 
+  // API Route for the Chatbot
+  app.post("/api/chat", async (req, res) => {
+    try {
+      const { question, documentText, history } = req.body;
+
+      if (!question || !documentText) {
+        return res.status(400).json({ error: "Missing question or document text" });
+      }
+
+      // Safely call the backend service
+      const answer = await chatWithDocument(question, documentText, history);
+      res.json({ answer });
+    } catch (error) {
+      console.error("Chat API Error:", error);
+      res.status(500).json({ error: "Failed to get chat response" });
+    }
+  });
   // Share Analysis
   app.post("/api/share", async (req, res) => {
     try {
