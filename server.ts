@@ -218,19 +218,24 @@ app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
       // @ts-ignore
       report.data.clauses.forEach((clause, i) => {
-        doc.fontSize(12).font('Helvetica-Bold').text(`[${i + 1}] ${clause.risk?.toUpperCase()} RISK`);
+        // FIX 1: Reset pen color to black so text isn't invisible!
+        doc.fillColor('black');
+
+        doc.fontSize(12).font('Helvetica-Bold').text(`[${i + 1}] ${(clause.risk || "unknown").toUpperCase()} RISK`);
         doc.fontSize(10).font('Helvetica-Oblique').text(`Origin: ${(clause.text || "Original text unavailable").substring(0, 100)}...`);
         doc.moveDown(0.5);
         doc.fontSize(10).font('Helvetica-Bold').text("Simplified:");
         doc.fontSize(10).font('Helvetica').text(clause.simplified || "N/A");
         doc.moveDown(0.5);
         doc.fontSize(10).font('Helvetica-Bold').text("Advice:");
-       doc.fontSize(10).font('Helvetica').text(clause.simplified || "N/A");
+        
+        // FIX 2: Swapped 'simplified' to 'suggestion'
+        doc.fontSize(10).font('Helvetica').text(clause.suggestion || "N/A"); 
+        
         doc.moveDown();
         doc.rect(doc.x, doc.y, 400, 1).fill("#EEEEEE");
         doc.moveDown();
       });
-
       doc.end();
     } catch (error) {
       console.error("PDF Download Error:", error);

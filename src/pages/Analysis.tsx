@@ -25,6 +25,7 @@ export default function Analysis() {
   const [result, setResult] = useState<AnalysisResult | null>(null);
   const [isSharing, setIsSharing] = useState(false);
   const [shareLink, setShareLink] = useState<string | null>(null);
+  const { token } = useAuth();
   const rawDocumentText = sessionStorage.getItem("documentText") || "";
   const navigate = useNavigate();
 
@@ -78,7 +79,6 @@ export default function Analysis() {
     setIsSharing(true);
     setShareLink(null);
 
-    const { token } = useAuth(); // Need to get this correctly in the component
 
     try {
       const response = await fetch("/api/share", {
