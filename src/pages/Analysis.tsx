@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Download, Share2, AlertCircle, CheckCircle2, AlertTriangle, FileText, LayoutDashboard } from "lucide-react";
+import { ArrowLeft, Download, Share2, AlertCircle, CheckCircle2, AlertTriangle, FileText, LayoutDashboard, Phone, Mail, Scale } from "lucide-react";
 import { motion } from "motion/react";
 import ClauseCard from "../components/ClauseCard";
 import RiskBadge from "../components/RiskBadge";
@@ -299,6 +299,48 @@ export default function Analysis() {
                     </div>
                   </div>
                 </div>
+              </div>
+
+              {/* Legal Assistance Section */}
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: 0.4 }}
+                className="rounded-3xl bg-gradient-to-br from-indigo-600 to-indigo-800 p-6 text-white shadow-lg shadow-indigo-200"
+              >
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/20 backdrop-blur-sm">
+                    <Scale className="h-6 w-6 text-indigo-100" />
+                  </div>
+                  <h3 className="font-bold">Legal Assistance</h3>
+                </div>
+                <p className="text-xs text-indigo-100/80 mb-6 leading-relaxed">
+                  Have doubts? Consult with our partner legal experts for a professional review of this document.
+                </p>
+                <div className="space-y-3 mb-6">
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-white/10">
+                      <Phone className="h-4 w-4" />
+                    </div>
+                    <span className="text-sm font-medium">+1 (800) LEGAL-AI</span>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-white/10">
+                      <Mail className="h-4 w-4" />
+                    </div>
+                    <span className="text-sm font-medium">consult@clausebreaker.ai</span>
+                  </div>
+                </div>
+                <button className="w-full rounded-xl bg-white py-3 text-sm font-bold text-indigo-600 shadow-sm transition-all hover:bg-indigo-50 active:scale-[0.98]">
+                  Book Consultations
+                </button>
+              </motion.div>
+
+              {/* Disclaimer */}
+              <div className="px-4 py-2">
+                <p className="text-[10px] leading-relaxed text-gray-400 text-center italic">
+                  Disclaimer: AI-generated summaries are for informational purposes only and do not constitute legal advice.
+                </p>
               </div>
             </div>
           </div>
