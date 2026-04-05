@@ -6,6 +6,7 @@ import ClauseCard from "../components/ClauseCard";
 import RiskBadge from "../components/RiskBadge";
 import { cn } from "@/src/lib/utils";
 import ChatSection from "../components/ChatSection"; 
+import { useAuth } from "../context/AuthContext";
 interface Clause {
   text: string;
   simplified: string;
@@ -77,10 +78,15 @@ export default function Analysis() {
     setIsSharing(true);
     setShareLink(null);
 
+    const { token } = useAuth(); // Need to get this correctly in the component
+
     try {
       const response = await fetch("/api/share", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}` 
+        },
         body: JSON.stringify(result),
       });
 

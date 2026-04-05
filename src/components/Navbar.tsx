@@ -1,9 +1,11 @@
-import { Scale, FileText, LayoutDashboard, GitCompare } from "lucide-react";
+import { Scale, FileText, LayoutDashboard, GitCompare, LogOut, User as UserIcon } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/src/lib/utils";
+import { useAuth } from "../context/AuthContext";
 
 export default function Navbar() {
   const location = useLocation();
+  const { user, logout } = useAuth();
 
   const navItems = [
     { name: "Home", path: "/", icon: FileText },
@@ -41,10 +43,39 @@ export default function Navbar() {
           ))}
         </div>
 
-        <div className="flex items-center gap-4">
-          <button className="rounded-full bg-indigo-600 px-5 py-2 text-sm font-semibold text-white shadow-md transition-all hover:bg-indigo-700 hover:shadow-lg active:scale-95">
-            Get Started
-          </button>
+        <div className="flex items-center gap-3">
+          {user ? (
+            <div className="flex items-center gap-4">
+              <div className="hidden sm:flex items-center gap-2">
+                <div className="h-8 w-8 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600">
+                  <UserIcon className="h-4 w-4" />
+                </div>
+                <span className="text-sm font-semibold text-gray-700">{user.name}</span>
+              </div>
+              <button
+                onClick={logout}
+                className="flex items-center gap-2 rounded-full bg-white border border-gray-200 px-4 py-2 text-sm font-semibold text-gray-700 shadow-sm transition-all hover:bg-gray-50 hover:border-gray-300 active:scale-95"
+              >
+                <LogOut className="h-4 w-4" />
+                <span className="hidden sm:inline">Logout</span>
+              </button>
+            </div>
+          ) : (
+            <>
+              <Link
+                to="/login"
+                className="text-sm font-semibold text-gray-600 hover:text-indigo-600 transition-colors"
+              >
+                Sign In
+              </Link>
+              <Link
+                to="/register"
+                className="rounded-full bg-indigo-600 px-5 py-2 text-sm font-semibold text-white shadow-md transition-all hover:bg-indigo-700 hover:shadow-lg active:scale-95"
+              >
+                Get Started
+              </Link>
+            </>
+          )}
         </div>
       </div>
     </nav>

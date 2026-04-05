@@ -13,6 +13,8 @@ import mongoose from "mongoose";
 import { Report } from "./src/models/Report";
 import PDFDocument from "pdfkit";
 import crypto from "crypto";
+import jwt from "jsonwebtoken";
+import authRoutes from "./src/routes/authRoutes";
 
 import { createRequire } from "module";
 const require = createRequire(import.meta.url);
@@ -131,6 +133,18 @@ app.use(express.urlencoded({ limit: '50mb', extended: true }));
   app.post("/api/share", async (req, res) => {
     try {
       const { summary, overallRisk, clauses } = req.body;
+      const authHeader = req.headers["authorization"];
+      const token = authHeader && authHeader.split(" ")[1];
+      let ownerId = null;
+
+      if (token) {
+        try {
+          const decoded = jwt.verify(token, process.env.JWT_SECRET || "your-secret-key") as any;
+          ownerId = decoded.userId;
+        } catch (jwtErr) {
+          console.warn("Invalid token in share API, continuing as guest");
+        }
+      }
 
       // Using crypto exclusively to avoid 'nanoid' ESM import crashes
       const shareId = crypto.randomBytes(5).toString('hex');
@@ -139,7 +153,8 @@ app.use(express.urlencoded({ limit: '50mb', extended: true }));
       const newReport = new Report({
         shareId,
         password,
-        data: { summary, overallRisk, clauses }
+        data: { summary, overallRisk, clauses },
+        owner: ownerId
       });
 
       await newReport.save();
@@ -211,6 +226,8 @@ app.use(express.urlencoded({ limit: '50mb', extended: true }));
       res.status(500).send("Failed to generate PDF");
     }
   });
+
+  app.use("/api/auth", authRoutes);
 
   app.get("/api/health", (req, res) => {
     res.json({ status: "ok" });

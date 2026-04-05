@@ -16,6 +16,7 @@ const ReportSchema = new mongoose.Schema({
     overallRisk: String,
     clauses: [ClauseSchema],
   },
+  owner: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
   createdAt: { type: Date, default: Date.now },
 });
 
