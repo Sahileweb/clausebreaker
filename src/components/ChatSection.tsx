@@ -4,8 +4,8 @@ import { motion, AnimatePresence } from "motion/react";
 import { cn } from "@/src/lib/utils";
 
 interface Message {
-  role: "user" | "model";
-  text: string;
+  role: "user" | "assistant";
+  content: string;
 }
 
 interface ChatSectionProps {
@@ -29,19 +29,19 @@ export default function ChatSection({ documentText }: ChatSectionProps) {
   const handleSend = async () => {
     if (!input.trim() || isLoading) return;
 
-    const userMessage: Message = { role: "user", text: input };
+    const userMessage: Message = { role: "user", content: input };
     setMessages((prev) => [...prev, userMessage]);
     setInput("");
     setIsLoading(true);
 
     try {
-      // 1. Prepare history for the Gemini service
+      // 1. Prepare history for the chatbot service (Standardized format)
       const history = messages.map((m) => ({
         role: m.role,
-        parts: [{ text: m.text }],
+        content: m.content,
       }));
 
-      // 2. Safely call the backend server API instead of the file directly
+      // 2. Call the backend server API
       const response = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -55,14 +55,14 @@ export default function ChatSection({ documentText }: ChatSectionProps) {
       if (!response.ok) throw new Error("Chat request failed");
 
       const data = await response.json();
-      const botMessage: Message = { role: "model", text: data.answer };
+      const botMessage: Message = { role: "assistant", content: data.answer };
       setMessages((prev) => [...prev, botMessage]);
       
     } catch (error) {
       console.error("Chat error:", error);
       const errorMessage: Message = { 
-        role: "model", 
-        text: "Sorry, I encountered an error. Please try again." 
+        role: "assistant", 
+        content: "Sorry, I encountered an error. Please try again." 
       };
       setMessages((prev) => [...prev, errorMessage]);
     } finally {
@@ -71,8 +71,8 @@ export default function ChatSection({ documentText }: ChatSectionProps) {
   };
 
   return (
-    <div className="mt-12 overflow-hidden rounded-3xl bg-white shadow-sm border border-gray-100">
-      <div className="flex items-center gap-3 border-b border-gray-100 bg-gray-50/50 px-8 py-4">
+    <div className="overflow-hidden rounded-3xl bg-white shadow-sm border border-gray-100">
+      <div className="flex items-center gap-3 border-b border-gray-100 bg-gray-50/50 px-6 py-3">
         <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-indigo-600 text-white">
           <MessageSquare className="h-5 w-5" />
         </div>
@@ -80,7 +80,7 @@ export default function ChatSection({ documentText }: ChatSectionProps) {
       </div>
 
       <div className="flex h-[500px] flex-col">
-        <div className="flex-1 overflow-y-auto p-8 space-y-6">
+        <div className="flex-1 overflow-y-auto p-5 space-y-4">
           {messages.length === 0 && (
             <div className="flex h-full flex-col items-center justify-center text-center text-gray-400">
               <MessageSquare className="h-12 w-12 mb-4 opacity-20" />
@@ -112,7 +112,7 @@ export default function ChatSection({ documentText }: ChatSectionProps) {
                     ? "bg-indigo-600 text-white rounded-tr-none" 
                     : "bg-gray-100 text-gray-900 rounded-tl-none"
                 )}>
-                  {message.text}
+                  {message.content}
                 </div>
               </motion.div>
             ))}
@@ -131,7 +131,7 @@ export default function ChatSection({ documentText }: ChatSectionProps) {
           <div ref={messagesEndRef} />
         </div>
 
-        <div className="border-t border-gray-100 p-6">
+        <div className="border-t border-gray-100 p-5">
           <div className="relative flex items-center">
             <input
               type="text"

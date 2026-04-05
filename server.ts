@@ -1,7 +1,8 @@
 import dotenv from "dotenv";
 dotenv.config(); // THIS FIXES THE MONGODB SHARE CRASH!
 
-import { analyzeLegalDocument, extractTextFromImage, chatWithDocument,compareLegalDocuments } from "./src/services/geminiService";
+import { analyzeLegalDocument, extractTextFromImage, compareLegalDocuments } from "./src/services/geminiService";
+import { chatWithGroq } from "./src/services/groqService";
 import * as mammoth from "mammoth";
 console.log(">>> server.ts is being executed at " + new Date().toISOString());
 import express from "express";
@@ -94,17 +95,27 @@ app.use(express.urlencoded({ limit: '50mb', extended: true }));
     }
   });
 
-  // API Route for the Chatbot
+  // API Route for the Chatbot (Using Groq)
   app.post("/api/chat", async (req, res) => {
     try {
-      const { question, documentText, history } = req.body;
+      const { question, documentText, history = [] } = req.body;
 
       if (!question || !documentText) {
         return res.status(400).json({ error: "Missing question or document text" });
       }
 
-      // Safely call the backend service
-      const answer = await chatWithDocument(question, documentText, history);
+      // Format messages for Groq
+      const messages = [
+        {
+          role: "system",
+          content: `You are a legal document assistant. Answer ONLY using the provided document. Do not use outside knowledge. If the answer is not present, say 'Not found in document'. Explain in simple plain English.\n\nDocument Text:\n${documentText}`
+        },
+        ...history,
+        { role: "user", content: question }
+      ];
+
+      // @ts-ignore
+      const answer = await chatWithGroq(messages);
       res.json({ answer });
     } catch (error) {
       console.error("Chat API Error:", error);

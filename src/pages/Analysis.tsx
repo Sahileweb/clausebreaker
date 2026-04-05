@@ -237,9 +237,9 @@ export default function Analysis() {
           </motion.div>
         </div>
 
-        <div className="mt-8 grid grid-cols-1 gap-8 lg:grid-cols-3">
-          {/* Summary Section */}
-          <div className="lg:col-span-1">
+        <div className="mt-8 grid grid-cols-1 gap-8 lg:grid-cols-12">
+          {/* Left Sidebar: Summary & Stats */}
+          <div className="lg:col-span-3">
             <div className="sticky top-24 space-y-6">
               <motion.div
                 initial={{ opacity: 0, x: -20 }}
@@ -303,8 +303,8 @@ export default function Analysis() {
             </div>
           </div>
 
-          {/* Clauses List */}
-          <div className="lg:col-span-2">
+          {/* Center Column: Clauses List */}
+          <div className="lg:col-span-6">
             <div className="flex items-center justify-between mb-6">
               <div className="flex items-center gap-3">
                 <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white text-indigo-600 shadow-sm border border-gray-100">
@@ -324,7 +324,13 @@ export default function Analysis() {
               ))}
             </div>
           </div>
-          <ChatSection documentText={rawDocumentText} />
+
+          {/* Right Sidebar: Chat Section */}
+          <div className="lg:col-span-3">
+            <div className="sticky top-24">
+              <ChatSection documentText={rawDocumentText} />
+            </div>
+          </div>
         </div>
       </div>
     </div>

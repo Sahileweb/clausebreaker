@@ -252,34 +252,4 @@ export async function extractTextFromImage(imageBuffer: Buffer, mimeType: string
   return response.text;
 }
 
-export async function chatWithDocument(question: string, documentText: string, history: any[] = []): Promise<string> {
-  const model = "gemini-2.5-flash";
-  const currentAi = getNextAiClient();
 
-  const systemInstruction = `
-    You are a legal document assistant.
-    Answer ONLY using the provided document.
-    Do not use outside knowledge.
-    If the answer is not present, say 'Not found in document'.
-    Explain in simple plain English.
-    
-    Document Text:
-    ${documentText}
-  `;
-
-  const chat = currentAi.chats.create({
-    model,
-    config: {
-      systemInstruction,
-    },
-    history: history,
-  });
-
-  const response = await chat.sendMessage({ message: question });
-
-  if (!response.text) {
-    throw new Error("No response from Gemini");
-  }
-
-  return response.text;
-}
