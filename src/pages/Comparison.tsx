@@ -64,10 +64,7 @@ export default function Comparison() {
         content2 = parseData.text;
       }
 
-      // 3. Compare the content using Gemini service (frontend)
-      // const { compareLegalDocuments } = await import("../services/geminiService");
-      // const result = await compareLegalDocuments(content1, content2, language);
-      // setResult(result);
+      
       const compareResponse = await fetch("/api/compare", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
