@@ -4,6 +4,7 @@ import { ArrowLeft, Download, Share2, AlertCircle, CheckCircle2, AlertTriangle, 
 import { motion } from "motion/react";
 import ClauseCard from "../components/ClauseCard";
 import RiskBadge from "../components/RiskBadge";
+import LanguageSelector from "../components/LanguageSelector";
 import { cn } from "@/src/lib/utils";
 import ChatSection from "../components/ChatSection"; 
 import { useAuth } from "../context/AuthContext";
@@ -25,6 +26,8 @@ export default function Analysis() {
   const [result, setResult] = useState<AnalysisResult | null>(null);
   const [isSharing, setIsSharing] = useState(false);
   const [shareLink, setShareLink] = useState<string | null>(null);
+  const [language, setLanguage] = useState("English");
+  const [isTranslating, setIsTranslating] = useState(false);
   const { token } = useAuth();
   const rawDocumentText = sessionStorage.getItem("documentText") || "";
   const navigate = useNavigate();
@@ -105,6 +108,60 @@ export default function Analysis() {
     }
   };
 
+  const handleLanguageChange = async (newLang: string) => {
+    if (newLang === language) return;
+    setIsTranslating(true);
+    setLanguage(newLang);
+
+    try {
+      const storedOriginal = sessionStorage.getItem("analysisResult");
+      if (!storedOriginal) return;
+      
+      const original: AnalysisResult = JSON.parse(storedOriginal);
+      
+      // If switching back to English, just restore original
+      if (newLang === "English") {
+        setResult(original);
+        return;
+      }
+
+      const translateText = async (text: string) => {
+        if (!text || text === "N/A") return text;
+        const response = await fetch("/api/translate", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ text, targetLang: newLang }),
+        });
+        const data = await response.json();
+        return data.translated || text;
+      };
+
+      // Translate summary
+      const translatedSummary = await translateText(original.summary);
+
+      // Translate all clauses
+      const translatedClauses = await Promise.all(
+        original.clauses.map(async (clause) => ({
+          ...clause,
+          simplified: await translateText(clause.simplified),
+          explanation: await translateText(clause.explanation),
+          suggestion: await translateText(clause.suggestion),
+        }))
+      );
+
+      setResult({
+        ...original,
+        summary: translatedSummary,
+        clauses: translatedClauses,
+      });
+    } catch (error) {
+      console.error("Translation failed:", error);
+      alert("Failed to translate document. Please try again.");
+    } finally {
+      setIsTranslating(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-slate-50 pb-20">
       <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
@@ -123,7 +180,14 @@ export default function Analysis() {
             </div>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-6">
+            <LanguageSelector 
+              selectedLanguage={language} 
+              onLanguageChange={handleLanguageChange} 
+              className={cn(isTranslating && "opacity-50 pointer-events-none")}
+            />
+            <div className="h-8 w-px bg-gray-200 hidden md:block" />
+            <div className="flex items-center gap-3">
             <button
               onClick={handleDownload}
               className="flex items-center gap-2 rounded-xl bg-white px-4 py-2.5 text-sm font-bold text-gray-700 shadow-sm border border-gray-200 hover:bg-gray-50 transition-all"
@@ -150,6 +214,18 @@ export default function Analysis() {
             </button>
           </div>
         </div>
+      </div>
+
+        {isTranslating && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mt-6 flex items-center justify-center gap-3 rounded-2xl bg-indigo-50 p-4 border border-indigo-100 text-indigo-700 font-medium"
+          >
+            <div className="h-4 w-4 animate-spin rounded-full border-2 border-indigo-600 border-t-transparent" />
+            Translating results to {language}... This may take a moment.
+          </motion.div>
+        )}
 
         {shareLink && (
           <motion.div

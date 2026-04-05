@@ -2,13 +2,11 @@ import React, { useState, useRef } from "react";
 import { Upload, FileText, ArrowRight, Loader2, CheckCircle2, ShieldCheck, Zap, FileCode, ImageIcon } from "lucide-react";
 import { motion } from "motion/react";
 import { useNavigate } from "react-router-dom";
-import LanguageSelector from "../components/LanguageSelector";
 import { cn } from "@/src/lib/utils";
 
 export default function Home() {
   const [text, setText] = useState("");
   const [file, setFile] = useState<File | null>(null);
-  const [language, setLanguage] = useState("English");
   const [isLoading, setIsLoading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const navigate = useNavigate();
@@ -51,7 +49,7 @@ export default function Home() {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ text: contentToAnalyze, language }),
+        body: JSON.stringify({ text: contentToAnalyze, language: "English" }),
       });
 
       if (!analyzeResponse.ok) {
@@ -107,8 +105,8 @@ export default function Home() {
               <span className="text-sm font-medium text-gray-700">Instant AI Analysis</span>
             </div>
             <div className="flex items-center gap-2 rounded-full bg-white px-4 py-2 shadow-sm border border-gray-100">
-              <CheckCircle2 className="h-5 w-5 text-indigo-500" />
-              <span className="text-sm font-medium text-gray-700">Multi-language Support</span>
+              <ShieldCheck className="h-5 w-5 text-indigo-500" />
+              <span className="text-sm font-medium text-gray-700">256-bit Security</span>
             </div>
           </motion.div>
         </div>
@@ -124,10 +122,6 @@ export default function Home() {
             <div className="rounded-3xl bg-white p-8 shadow-xl shadow-indigo-100/50 border border-indigo-50">
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-xl font-bold text-gray-900">Input Legal Text</h2>
-                <LanguageSelector
-                  selectedLanguage={language}
-                  onLanguageChange={setLanguage}
-                />
               </div>
 
               <div className="space-y-6">

@@ -2,7 +2,6 @@ import { useState, useRef } from "react";
 import { Upload, FileText, ArrowRight, Loader2, GitCompare, AlertCircle, CheckCircle2, ArrowLeft, FileCode, ImageIcon } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { useNavigate } from "react-router-dom";
-import LanguageSelector from "../components/LanguageSelector";
 import { cn } from "@/src/lib/utils";
 
 interface Difference {
@@ -22,7 +21,6 @@ export default function Comparison() {
   const [file2, setFile2] = useState<File | null>(null);
   const [text1, setText1] = useState("");
   const [text2, setText2] = useState("");
-  const [language, setLanguage] = useState("English");
   const [isLoading, setIsLoading] = useState(false);
   const [result, setResult] = useState<ComparisonResult | null>(null);
 
@@ -71,7 +69,7 @@ export default function Comparison() {
         body: JSON.stringify({ 
           text1: content1, 
           text2: content2, 
-          language: language 
+          language: "English" 
         }),
       });
 
@@ -106,7 +104,6 @@ export default function Comparison() {
               <p className="text-sm text-gray-500">Compare two legal documents and highlight key differences</p>
             </div>
           </div>
-          <LanguageSelector selectedLanguage={language} onLanguageChange={setLanguage} />
         </div>
 
         {!result ? (

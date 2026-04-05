@@ -139,6 +139,34 @@ app.use(express.urlencoded({ limit: '50mb', extended: true }));
       res.status(500).json({ error: "Failed to compare documents" });
     }
   });
+
+  // API Route for non-AI Language Translation
+  app.post("/api/translate", async (req, res) => {
+    try {
+      const { text, targetLang } = req.body;
+      if (!text || !targetLang) {
+        return res.status(400).json({ error: "Missing text or target language" });
+      }
+
+      // Using a reliable public translation endpoint as a "JS lib" equivalent
+      const langMap: Record<string, string> = {
+        "English": "en", "Hindi": "hi", "Marathi": "mr", "Tamil": "ta", "Telugu": "te",
+        "Bengali": "bn", "Gujarati": "gu", "Kannada": "kn", "Malayalam": "ml", "Punjabi": "pa"
+      };
+      
+      const targetCode = langMap[targetLang] || "en";
+      const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=${targetCode}&dt=t&q=${encodeURIComponent(text)}`;
+      
+      const response = await fetch(url);
+      const data = await response.json();
+      const translated = data[0].map((s: any) => s[0]).join("");
+      
+      res.json({ translated });
+    } catch (error) {
+      console.error("Translation Error:", error);
+      res.status(500).json({ error: "Translation failed" });
+    }
+  });
   
   // Share Analysis
   app.post("/api/share", async (req, res) => {
