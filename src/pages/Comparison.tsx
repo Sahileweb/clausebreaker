@@ -65,9 +65,25 @@ export default function Comparison() {
       }
 
       // 3. Compare the content using Gemini service (frontend)
-      const { compareLegalDocuments } = await import("../services/geminiService");
-      const result = await compareLegalDocuments(content1, content2, language);
-      setResult(result);
+      // const { compareLegalDocuments } = await import("../services/geminiService");
+      // const result = await compareLegalDocuments(content1, content2, language);
+      // setResult(result);
+      const compareResponse = await fetch("/api/compare", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ 
+          text1: content1, 
+          text2: content2, 
+          language: language 
+        }),
+      });
+
+      if (!compareResponse.ok) {
+        throw new Error("Comparison request failed on the server.");
+      }
+
+      const comparisonData = await compareResponse.json();
+      setResult(comparisonData);
     } catch (error) {
       console.error("Comparison failed:", error);
       alert(error instanceof Error ? error.message : "Failed to compare documents. Please try again.");

@@ -1,7 +1,7 @@
 import dotenv from "dotenv";
 dotenv.config(); // THIS FIXES THE MONGODB SHARE CRASH!
 
-import { analyzeLegalDocument, extractTextFromImage, chatWithDocument } from "./src/services/geminiService";
+import { analyzeLegalDocument, extractTextFromImage, chatWithDocument,compareLegalDocuments } from "./src/services/geminiService";
 import * as mammoth from "mammoth";
 console.log(">>> server.ts is being executed at " + new Date().toISOString());
 import express from "express";
@@ -109,6 +109,24 @@ app.use(express.urlencoded({ limit: '50mb', extended: true }));
       res.status(500).json({ error: "Failed to get chat response" });
     }
   });
+  // API Route for Document Comparison
+  app.post("/api/compare", async (req, res) => {
+    try {
+      const { text1, text2, language } = req.body;
+
+      if (!text1 || !text2) {
+        return res.status(400).json({ error: "Missing document text for comparison" });
+      }
+
+      // Safely call the backend service
+      const comparison = await compareLegalDocuments(text1, text2, language);
+      res.json(comparison);
+    } catch (error) {
+      console.error("Comparison API Error:", error);
+      res.status(500).json({ error: "Failed to compare documents" });
+    }
+  });
+  
   // Share Analysis
   app.post("/api/share", async (req, res) => {
     try {
